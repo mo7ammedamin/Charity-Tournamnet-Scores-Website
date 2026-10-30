@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISoc Charity Tournament</title>
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --card: #ffffff;
+    --text: #1c2333;
+    --muted: #6b7488;
+    --border: #e2e6ef;
+    --accent: #2563eb;
+    --gold: #f5b301;
+    --silver: #9aa3b2;
+    --bronze: #c97b3a;
+    --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1420;
+      --card: #181f2e;
+      --text: #e8ecf5;
+      --muted: #8b95aa;
+      --border: #2a3347;
+      --accent: #3b82f6;
+      --warn: #fbbf24;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 16px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.1rem; margin: 24px 0 8px; }
+  h3 {
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--muted); margin: 20px 0 8px;
+  }
+  .sub { color: var(--muted); font-size: .85rem; min-height: 1em; }
+
+  /* Tabs */
+  .tabs {
+    display: flex; gap: 8px; margin: 12px 0 4px; padding: 8px 0;
+    position: sticky; top: 0; z-index: 1; background: var(--bg);
+  }
+  .tabs button {
+    flex: 1; padding: 10px 6px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+    font: inherit; font-size: .95rem; cursor: pointer;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button[aria-selected="true"] {
+    background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600;
+  }
+
+  /* League filter chips */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chips button {
+    padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--card); color: var(--muted); font: inherit; font-size: .8rem; cursor: pointer;
+  }
+  .chips button.on { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+  /* League tables */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 6px 14px; overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 5px; border-bottom: 1px solid var(--border); text-align: center; font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+  th { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  th.team, td.team { text-align: left; }
+  .rank { width: 32px; font-weight: 700; }
+  .rank.r1 { color: var(--gold); }
+  .rank.r2 { color: var(--silver); }
+  .rank.r3 { color: var(--bronze); }
+  .pts { font-weight: 700; }
+
+  /* Match cards (results + fixtures) */
+  .match {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .meta { font-size: .72rem; color: var(--muted); margin-bottom: 8px; }
+  .line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+  .line .t1 { text-align: right; }
+  .line .won { font-weight: 700; }
+  .line .lost { color: var(--muted); }
+  .sc {
+    min-width: 60px; text-align: center; padding: 4px 8px; border-radius: 6px;
+    background: var(--bg); font-weight: 700; font-variant-numeric: tabular-nums;
+  }
+  .sc.vs { font-weight: 500; color: var(--muted); }
+  .mnote { font-size: .75rem; color: var(--muted); text-align: center; margin-top: 8px; }
+
+  .msg { color: var(--muted); padding: 24px 0; text-align: center; }
+  .warn { color: var(--warn); font-size: .8rem; margin-top: 12px; }
+  .note { color: var(--muted); font-size: .75rem; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏆 ISoc Charity Tournament</h1>
+  <div class="sub" id="updated"></div>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="tables">Tables</button>
+    <button role="tab" data-tab="results">Results</button>
+    <button role="tab" data-tab="fixtures">Fixtures</button>
+  </nav>
+
+  <section id="tables" role="tabpanel"><div class="msg">Loading…</div></section>
+  <section id="results" role="tabpanel" hidden></section>
+  <section id="fixtures" role="tabpanel" hidden></section>
+
+  <div class="warn" id="warn" hidden></div>
+</div>
+
+<script>
+  // ================= SETTINGS =================
+  const TEAMS_FILE   = "teams.csv";    // league,team
+  const MATCHES_FILE = "matches.csv";  // date,time,league,stage,team1,score1,team2,score2,venue,note
+  const POINTS_FOR_WIN  = 3;
+  const POINTS_FOR_DRAW = 1;
+  const POINTS_FOR_LOSS = 0;
+  // Matches whose "stage" is blank or "Group" count toward the league tables.
+  // Anything else (Semi-final, Final, ...) only shows in Results / Fixtures.
+  const TABLE_STAGES = ["", "group"];
+  // ============================================
+
+  const TABS = ["tables", "results", "fixtures"];
+  const warnBox = document.getElementById("warn");
+  let DATA = null;
+  let leagueFilter = "All";
+
+  // ---------- helpers ----------
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined && text !== null) e.textContent = text;   // never parsed as HTML
+    return e;
+  }
+
+  // CSV parser: quoted fields, "" escapes, CRLF. Also accepts tab-separated files.
+  function parseCSV(text) {
+    text = text.replace(/^\uFEFF/, "");
+    const firstLine = text.split(/\r?\n/, 1)[0];
+    const delim = firstLine.includes("\t") && !firstLine.includes(",") ? "\t" : ",";
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+        else if (c === '"') inQuotes = false;
+        else field += c;
+      } else if (c === '"') inQuotes = true;
+      else if (c === delim) { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); field = "";
+        rows.push(row); row = [];
+      } else field += c;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  // Turns CSV text into [{line, get(col)}], checking required columns exist
+  function readRows(text, fileName, required) {
+    const rows = parseCSV(text);
+    if (!rows.length) throw new Error(fileName + " is empty.");
+    const header = rows.shift().map(h => h.trim().toLowerCase());
+    const missing = required.filter(k => !header.includes(k));
+    if (missing.length) {
+      throw new Error(fileName + " is missing column(s): " + missing.join(", ") +
+        ". The first line must be: " + required.join(","));
+    }
+    return rows
+      .map((r, i) => ({ line: i + 2, cells: r }))
+      .filter(r => r.cells.some(x => x.trim() !== ""))
+      .map(r => ({ line: r.line, get: k => (r.cells[header.indexOf(k)] || "").trim() }));
+  }
+
+  // blank -> null, whole number -> number, anything else -> NaN
+  function toScore(v) {
+    if (v === "") return null;
+    return /^\d{1,3}$/.test(v) ? parseInt(v, 10) : NaN;
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "Date TBC";
+    const [y, m, d] = iso.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined,
+      { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  }
+
+  // ---------- data ----------
+  function parseData(teamsText, matchesText) {
+    const skipped = [];
+
+    const teams = readRows(teamsText, TEAMS_FILE, ["league", "team"])
+      .filter(r => {
+        if (r.get("league") && r.get("team")) return true;
+        skipped.push(TEAMS_FILE + " line " + r.line);
+        return false;
+      })
+      .map(r => ({ league: r.get("league"), team: r.get("team") }));
+
+    const matches = readRows(matchesText, MATCHES_FILE,
+      ["date", "time", "league", "stage", "team1", "score1", "team2", "score2", "venue", "note"])
+      .map(r => {
+        const m = {
+          date: r.get("date"), time: r.get("time"), league: r.get("league"), stage: r.get("stage"),
+          team1: r.get("team1"), team2: r.get("team2"),
+          s1: toScore(r.get("score1")), s2: toScore(r.get("score2")),
+          venue: r.get("venue"), note: r.get("note")
+        };
+        const ok = m.league && m.team1 && m.team2 &&
+          !Number.isNaN(m.s1) && !Number.isNaN(m.s2) &&
+          (m.s1 === null) === (m.s2 === null) &&                 // both scores or neither
+          (m.date === "" || /^\d{4}-\d{2}-\d{2}$/.test(m.date)) &&
+          (m.time === "" || /^\d{1,2}:\d{2}$/.test(m.time));
+        if (!ok) { skipped.push(MATCHES_FILE + " line " + r.line); return null; }
+        m.played = m.s1 !== null;
+        m.sortKey = (m.date || "9999-99-99") + " " + (m.time ? m.time.padStart(5, "0") : "99:99");
+        return m;
+      })
+      .filter(Boolean);
+
+    if (skipped.length) {
+      warnBox.hidden = false;
+      warnBox.textContent = "⚠ Skipped invalid line(s): " + skipped.join(", ") +
+        ". Check dates are YYYY-MM-DD, times are HH:MM, and scores are whole numbers (both filled in, or both blank).";
+    }
+    return { teams, matches };
+  }
+
+  function computeStandings(teams, matches) {
+    const leagues = new Map();   // keeps order of first appearance
+    const entry = (league, name) => {
+      const lk = league.toLowerCase();
+      if (!leagues.has(lk)) leagues.set(lk, { title: league, teams: new Map() });
+      const t = leagues.get(lk).teams;
+      const tk = name.toLowerCase();
+      if (!t.has(tk)) t.set(tk, { name, w: 0, d: 0, l: 0, gf: 0, ga: 0 });
+      return t.get(tk);
+    };
+
+    teams.forEach(t => entry(t.league, t.team));
+
+    matches
+      .filter(m => m.played && TABLE_STAGES.includes(m.stage.toLowerCase()))
+      .forEach(m => {
+        const a = entry(m.league, m.team1), b = entry(m.league, m.team2);
+        a.gf += m.s1; a.ga += m.s2;
+        b.gf += m.s2; b.ga += m.s1;
+        if (m.s1 > m.s2) { a.w++; b.l++; }
+        else if (m.s2 > m.s1) { b.w++; a.l++; }
+        else { a.d++; b.d++; }
+      });
+
+    return [...leagues.values()].map(lg => {
+      const rows = [...lg.teams.values()].map(t => ({
+        ...t,
+        played: t.w + t.d + t.l,
+        gd: t.gf - t.ga,
+        points: t.w * POINTS_FOR_WIN + t.d * POINTS_FOR_DRAW + t.l * POINTS_FOR_LOSS
+      })).sort((a, b) =>
+        b.points - a.points || b.gd - a.gd || b.gf - a.gf || a.name.localeCompare(b.name));
+      rows.forEach((t, i) => {
+        const p = rows[i - 1];
+        t.rank = p && p.points === t.points && p.gd === t.gd && p.gf === t.gf ? p.rank : i + 1;
+      });
+      return { title: lg.title, rows };
+    });
+  }
+
+  // ---------- rendering ----------
+  function renderTables() {
+    const box = document.getElementById("tables");
+    box.textContent = "";
+    const leagues = computeStandings(DATA.teams, DATA.matches);
+    if (!leagues.length) { box.appendChild(el("div", "msg", "No teams yet.")); return; }
+
+    leagues.forEach(lg => {
+      const card = el("div", "card");
+      const table = el("table");
+      const thead = el("thead");
+      const hr = el("tr");
+      [["#", ""], ["Team", "team"], ["MP"], ["W"], ["D"], ["L"], ["GD"], ["Pts"]]
+        .forEach(([t, c]) => hr.appendChild(el("th", c || "", t)));
+      thead.appendChild(hr);
+      const tbody = el("tbody");
+      lg.rows.forEach(t => {
+        const tr = el("tr");
+        [
+          [t.rank, "rank" + (t.rank <= 3 && t.played ? " r" + t.rank : "")],
+          [t.name, "team"],
+          [t.played], [t.w], [t.d], [t.l],
+          [(t.gd > 0 ? "+" : "") + t.gd],
+          [t.points, "pts"]
+        ].forEach(([v, c]) => tr.appendChild(el("td", c || "", v)));
+        tbody.appendChild(tr);
+      });
+      table.append(thead, tbody);
+      card.appendChild(table);
+      box.append(el("h2", "", lg.title), card);
+    });
+
+    box.appendChild(el("div", "note",
+      "Win = " + POINTS_FOR_WIN + " pts, Draw = " + POINTS_FOR_DRAW + " pt, Loss = " + POINTS_FOR_LOSS +
+      ". Tiebreak: goal difference, then goals scored. Only group matches count toward the table."));
+  }
+
+  function leagueChips(onChange) {
+    const names = [];
+    [...DATA.teams.map(t => t.league), ...DATA.matches.map(m => m.league)].forEach(n => {
+      if (!names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n);
+    });
+    const wrap = el("div", "chips");
+    if (names.length < 2) return wrap;
+    ["All", ...names].forEach(n => {
+      const b = el("button", n.toLowerCase() === leagueFilter.toLowerCase() ? "on" : "", n);
+      b.type = "button";
+      b.addEventListener("click", () => { leagueFilter = n; onChange(); });
+      wrap.appendChild(b);
+    });
+    return wrap;
+  }
+
+  function matchCard(m) {
+    const card = el("div", "match");
+    const meta = [m.league, m.stage, m.time, m.venue].filter(Boolean).join(" · ");
+    card.appendChild(el("div", "meta", meta));
+
+    const line = el("div", "line");
+    let c1 = "t1", c2 = "t2";
+    if (m.played && m.s1 !== m.s2) {
+      c1 += m.s1 > m.s2 ? " won" : " lost";
+      c2 += m.s2 > m.s1 ? " won" : " lost";
+    }
+    line.append(
+      el("span", c1, m.team1),
+      m.played ? el("span", "sc", m.s1 + " – " + m.s2) : el("span", "sc vs", "vs"),
+      el("span", c2, m.team2)
+    );
+    card.appendChild(line);
+    if (m.note) card.appendChild(el("div", "mnote", m.note));
+    return card;
+  }
+
+  function renderMatchList(id, played, emptyText) {
+    const box = document.getElementById(id);
+    box.textContent = "";
+    box.appendChild(leagueChips(renderLists));
+
+    const list = DATA.matches
+      .filter(m => m.played === played)
+      .filter(m => leagueFilter === "All" || m.league.toLowerCase() === leagueFilter.toLowerCase())
+      .sort((a, b) => played ? b.sortKey.localeCompare(a.sortKey) : a.sortKey.localeCompare(b.sortKey));
+
+    if (!list.length) { box.appendChild(el("div", "msg", emptyText)); return; }
+
+    let lastDate = null;
+    list.forEach(m => {
+      if (m.date !== lastDate) { box.appendChild(el("h3", "", formatDate(m.date))); lastDate = m.date; }
+      box.appendChild(matchCard(m));
+    });
+  }
+
+  function renderLists() {
+    renderMatchList("results", true, "No results yet.");
+    renderMatchList("fixtures", false, "No upcoming fixtures.");
+  }
+
+  // ---------- tabs ----------
+  function showTab() {
+    const tab = TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "tables";
+    document.querySelectorAll(".tabs button").forEach(b =>
+      b.setAttribute("aria-selected", b.dataset.tab === tab ? "true" : "false"));
+    TABS.forEach(t => { document.getElementById(t).hidden = t !== tab; });
+  }
+  document.querySelectorAll(".tabs button").forEach(b =>
+    b.addEventListener("click", () => { location.hash = b.dataset.tab; }));
+  window.addEventListener("hashchange", showTab);
+  showTab();
+
+  // ---------- load ----------
+  let newest = null;
+  function load(file) {
+    return fetch(file, { cache: "no-cache" }).then(res => {
+      if (!res.ok) throw new Error("Could not load " + file + " (HTTP " + res.status + "). Check the file name, including capital letters.");
+      const dt = new Date(res.headers.get("Last-Modified") || "");
+      if (!isNaN(dt) && (!newest || dt > newest)) newest = dt;
+      return res.text();
+    });
+  }
+
+  Promise.all([load(TEAMS_FILE), load(MATCHES_FILE)])
+    .then(([teamsText, matchesText]) => {
+      DATA = parseData(teamsText, matchesText);
+      if (newest) {
+        document.getElementById("updated").textContent = "Last updated: " +
+          newest.toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+      }
+      renderTables();
+      renderLists();
+    })
+    .catch(err => {
+      const box = document.getElementById("tables");
+      box.textContent = "";
+      const msg = err instanceof TypeError
+        ? "Could not load the data files. If you opened this file directly from your computer, it only works when served over http(s), e.g. GitHub Pages."
+        : err.message;
+      box.appendChild(el("div", "msg", msg));
+      location.hash = "tables";
+    });
+</script>
+</body>
+</html>
