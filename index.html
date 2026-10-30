@@ -84,12 +84,17 @@
   .rank.r3 { color: var(--bronze); }
   .pts { font-weight: 700; }
 
-  /* Match cards (results + fixtures) */
+  /* Match cards */
   .match {
     background: var(--card); border: 1px solid var(--border);
     border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
   }
-  .meta { font-size: .72rem; color: var(--muted); margin-bottom: 8px; }
+  .meta {
+    display: flex; justify-content: space-between; gap: 8px;
+    font-size: .8rem; margin-bottom: 8px;
+  }
+  .meta .code { font-weight: 700; color: var(--accent); }
+  .meta .slot { font-weight: 600; font-variant-numeric: tabular-nums; }
   .line { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
   .line .t1 { text-align: right; }
   .line .won { font-weight: 700; }
@@ -98,8 +103,7 @@
     min-width: 60px; text-align: center; padding: 4px 8px; border-radius: 6px;
     background: var(--bg); font-weight: 700; font-variant-numeric: tabular-nums;
   }
-  .sc.vs { font-weight: 500; color: var(--muted); }
-  .mnote { font-size: .75rem; color: var(--muted); text-align: center; margin-top: 8px; }
+  .sc.pending { color: var(--muted); }
 
   .msg { color: var(--muted); padding: 24px 0; text-align: center; }
   .warn { color: var(--warn); font-size: .8rem; margin-top: 12px; }
@@ -113,13 +117,11 @@
 
   <nav class="tabs" role="tablist">
     <button role="tab" data-tab="tables">Tables</button>
-    <button role="tab" data-tab="results">Results</button>
-    <button role="tab" data-tab="fixtures">Fixtures</button>
+    <button role="tab" data-tab="matches">Fixtures &amp; Results</button>
   </nav>
 
   <section id="tables" role="tabpanel"><div class="msg">Loading…</div></section>
-  <section id="results" role="tabpanel" hidden></section>
-  <section id="fixtures" role="tabpanel" hidden></section>
+  <section id="matches" role="tabpanel" hidden></section>
 
   <div class="warn" id="warn" hidden></div>
 </div>
@@ -131,12 +133,14 @@
   const POINTS_FOR_WIN  = 3;
   const POINTS_FOR_DRAW = 1;
   const POINTS_FOR_LOSS = 0;
-  // Matches whose "stage" is blank or "Group" count toward the league tables.
-  // Anything else (Semi-final, Final, ...) only shows in Results / Fixtures.
-  const TABLE_STAGES = ["", "group"];
+  // Match slot length in minutes per league (used if the note has no time slot)
+  const SLOT_MINUTES = { football: 30, futsal: 20 };
+  // Matches whose "stage" is blank or starts with "Group" count toward the league tables.
+  // Anything else (Semifinal, Final, ...) only shows in Fixtures & Results.
+  const isTableStage = s => s === "" || s.toLowerCase().startsWith("group");
   // ============================================
 
-  const TABS = ["tables", "results", "fixtures"];
+  const TABS = ["tables", "matches"];
   const warnBox = document.getElementById("warn");
   let DATA = null;
   let leagueFilter = "All";
@@ -203,6 +207,25 @@
       { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   }
 
+  function addMinutes(hhmm, mins) {
+    const [h, m] = hhmm.split(":").map(Number);
+    const t = h * 60 + m + mins;
+    return String(Math.floor(t / 60) % 24).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+  }
+
+  // Splits a note like "FB 1 | 16:50 - 17:20" into code + slot.
+  // If the note has no slot, the slot is worked out from the start time and league.
+  function codeAndSlot(m) {
+    const parts = m.note.split("|").map(s => s.trim());
+    const code = parts[0] || "";
+    let slot = parts[1] || "";
+    if (!slot && m.time) {
+      const len = SLOT_MINUTES[m.league.toLowerCase()];
+      slot = len ? m.time + " - " + addMinutes(m.time, len) : m.time;
+    }
+    return { code, slot };
+  }
+
   // ---------- data ----------
   function parseData(teamsText, matchesText) {
     const skipped = [];
@@ -222,7 +245,7 @@
           date: r.get("date"), time: r.get("time"), league: r.get("league"), stage: r.get("stage"),
           team1: r.get("team1"), team2: r.get("team2"),
           s1: toScore(r.get("score1")), s2: toScore(r.get("score2")),
-          venue: r.get("venue"), note: r.get("note")
+          venue: r.get("venue"), note: r.get("note"), line: r.line
         };
         const ok = m.league && m.team1 && m.team2 &&
           !Number.isNaN(m.s1) && !Number.isNaN(m.s2) &&
@@ -258,7 +281,7 @@
     teams.forEach(t => entry(t.league, t.team));
 
     matches
-      .filter(m => m.played && TABLE_STAGES.includes(m.stage.toLowerCase()))
+      .filter(m => m.played && isTableStage(m.stage))
       .forEach(m => {
         const a = entry(m.league, m.team1), b = entry(m.league, m.team2);
         a.gf += m.s1; a.ga += m.s2;
@@ -337,10 +360,13 @@
     return wrap;
   }
 
+  // Each box: match code + time slot on top, then team1  score  team2
   function matchCard(m) {
     const card = el("div", "match");
-    const meta = [m.league, m.stage, m.time, m.venue].filter(Boolean).join(" · ");
-    card.appendChild(el("div", "meta", meta));
+    const { code, slot } = codeAndSlot(m);
+    const meta = el("div", "meta");
+    meta.append(el("span", "code", code), el("span", "slot", slot));
+    card.appendChild(meta);
 
     const line = el("div", "line");
     let c1 = "t1", c2 = "t2";
@@ -350,36 +376,29 @@
     }
     line.append(
       el("span", c1, m.team1),
-      m.played ? el("span", "sc", m.s1 + " – " + m.s2) : el("span", "sc vs", "vs"),
+      m.played ? el("span", "sc", m.s1 + " – " + m.s2) : el("span", "sc pending", "# – #"),
       el("span", c2, m.team2)
     );
     card.appendChild(line);
-    if (m.note) card.appendChild(el("div", "mnote", m.note));
     return card;
   }
 
-  function renderMatchList(id, played, emptyText) {
-    const box = document.getElementById(id);
+  function renderMatches() {
+    const box = document.getElementById("matches");
     box.textContent = "";
-    box.appendChild(leagueChips(renderLists));
+    box.appendChild(leagueChips(renderMatches));
 
     const list = DATA.matches
-      .filter(m => m.played === played)
       .filter(m => leagueFilter === "All" || m.league.toLowerCase() === leagueFilter.toLowerCase())
-      .sort((a, b) => played ? b.sortKey.localeCompare(a.sortKey) : a.sortKey.localeCompare(b.sortKey));
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.line - b.line);
 
-    if (!list.length) { box.appendChild(el("div", "msg", emptyText)); return; }
+    if (!list.length) { box.appendChild(el("div", "msg", "No matches yet.")); return; }
 
     let lastDate = null;
     list.forEach(m => {
       if (m.date !== lastDate) { box.appendChild(el("h3", "", formatDate(m.date))); lastDate = m.date; }
       box.appendChild(matchCard(m));
     });
-  }
-
-  function renderLists() {
-    renderMatchList("results", true, "No results yet.");
-    renderMatchList("fixtures", false, "No upcoming fixtures.");
   }
 
   // ---------- tabs ----------
@@ -413,7 +432,7 @@
           newest.toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
       }
       renderTables();
-      renderLists();
+      renderMatches();
     })
     .catch(err => {
       const box = document.getElementById("tables");
