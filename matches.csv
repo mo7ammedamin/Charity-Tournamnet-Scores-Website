@@ -1,6 +1,29 @@
 date,time,league,stage,team1,score1,team2,score2,venue,note
-,,Football,Group,Hat-tricks,1,Forest Boys,0,,
-,,Football,Group,Hat-tricks,1,Eagles FC,0,,
-,,Football,Semi-final,TBD,,TBD,,,SF1
-,,Football,Semi-final,TBD,,TBD,,,SF2
-,,Football,Final,Winner SF1,,Winner SF2,,,
+date,time,league,stage,team1,score1,team2,score2,venue,note
+31 Oct,4:50–5:20 PM,Football,Group,Wazi FC,,Amin FC,,Football Pitch,FB 1
+31 Oct,4:50–5:10 PM,Futsal,Group 1,Milo Dinosaur,,Akg,,Futsal Court,FS 1
+31 Oct,5:20–5:50 PM,Football,Group,Forest Boys,,Eagles FC,,Football Pitch,FB 2
+31 Oct,5:30–5:50 PM,Futsal,Group 1,Mechamen,,Akg,,Futsal Court,FS 2
+31 Oct,5:50–6:20 PM,Football,Group,Wazi FC,,Milo Dinosaur,,Football Pitch,FB 3
+31 Oct,5:50–6:10 PM,Futsal,Group 2,Eagles FC,,Hatricks FC,,Futsal Court,FS 3
+31 Oct,6:10–6:30 PM,Futsal,Group 1,Joga Bonito,,Akg,,Futsal Court,FS 4 – Joga Bonito debut; Akg finishes Day 1
+31 Oct,6:20–6:50 PM,Football,Group,Forest Boys,,Amin FC,,Football Pitch,FB 4
+31 Oct,6:50–7:20 PM,Football,Group,Joga Bonito,,Milo Dinosaur,,Football Pitch,FB 5
+31 Oct,6:50–7:10 PM,Futsal,Group 2,Eagles FC,,Wazi FC,,Futsal Court,FS 5
+31 Oct,7:30–8:00 PM,Football,Group,Joga Bonito,,Eagles FC,,Football Pitch,FB 6 – play ends 7:52 PM; pitch closes
+31 Oct,7:30–7:50 PM,Futsal,Group 2,Wazi FC,,Hatricks FC,,Futsal Court,FS 6
+31 Oct,7:50–8:10 PM,Futsal,Group 1,Mechamen,,Milo Dinosaur,,Futsal Court,FS 7
+1 Nov,2:20–2:50 PM,Football,Group,Forest Boys,,Milo Dinosaur,,Football Pitch,FB 7
+1 Nov,2:20–2:40 PM,Futsal,Group 2,Eagles FC,,Atlas FC,,Futsal Court,FS 8 – Atlas FC 1st match
+1 Nov,2:40–3:00 PM,Futsal,Group 1,Joga Bonito,,Mechamen,,Futsal Court,FS 9
+1 Nov,2:50–3:20 PM,Football,Group,Wazi FC,,Eagles FC,,Football Pitch,FB 8
+1 Nov,3:20–3:50 PM,Football,Group,Joga Bonito,,Amin FC,,Football Pitch,FB 9 – league stage complete
+1 Nov,3:20–3:40 PM,Futsal,Group 2,Hatricks FC,,Atlas FC,,Futsal Court,FS 10 – Atlas FC 2nd match
+1 Nov,4:00–4:20 PM,Futsal,Group 1,Joga Bonito,,Milo Dinosaur,,Futsal Court,FS 11
+1 Nov,4:50–5:10 PM,Futsal,Group 2,Wazi FC,,Atlas FC,,Futsal Court,FS 12 – futsal group stage complete
+1 Nov,6:00–6:30 PM,Football,Semifinal,League 1st,,League 4th,,Football Pitch,Football SF 1
+1 Nov,6:00–6:20 PM,Futsal,Semifinal,TBD,,TBD,,Futsal Court,Futsal SF 1
+1 Nov,6:30–7:00 PM,Football,Semifinal,League 2nd,,League 3rd,,Football Pitch,Football SF 2
+1 Nov,6:30–6:50 PM,Futsal,Semifinal,TBD,,TBD,,Futsal Court,Futsal SF 2
+1 Nov,7:30–7:50 PM,Futsal,Final,Winner SF 1,,Winner SF 2,,Futsal Court,Futsal Grand Final
+1 Nov,8:10–8:40 PM,Football,Final,Winner SF 1,,Winner SF 2,,Football Pitch,Football Grand Final
