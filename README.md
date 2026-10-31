@@ -1,4 +1,4 @@
-# ISoc Charity Tournament Scoresb Website
+# ISoc Charity Tournament Scores Website
 
 Live site: https://mo7ammedamin.github.io/Charity-Tournamnet-Scores-Website/
 
