@@ -1,6 +1,6 @@
-# ISoc Charity Tournament Scores Website
+# ISoc Charity Tournament – scores site
 
-Live site: https://mo7ammedamin.github.io/Charity-Tournamnet-Scores-Website/
+Live site: https://YOUR-USERNAME.github.io/YOUR-REPO/
 
 ## Files
 
@@ -19,5 +19,4 @@ Live site: https://mo7ammedamin.github.io/Charity-Tournamnet-Scores-Website/
 
 ## Knockouts
 
-After the group stage, replace the placeholders in `knockouts.csv` (`League 1st`, `Group 1 - 1st`, `Winner SF 1`, …) with real team names.
-
+After the group stage, replace the placeholders in `knockouts.csv` (`League 1st`, `Group A Winner`, `Winner SF 1`, …) with real team names.
