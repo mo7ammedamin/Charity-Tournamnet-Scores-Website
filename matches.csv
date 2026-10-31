@@ -10,8 +10,8 @@ date,time,league,stage,team1,score1,team2,score2,venue,note
 2026-10-31,18:50,Football,Group,Eagles FC,0,Forest Boys,7,Football Pitch (9v9),FB 4 | 18:50 - 19:20
 2026-10-31,19:10,Futsal Group B,Group B,Wazi FC,6,Hatricks FC,1,Futsal Court,FS 6 | 19:10 - 19:30
 2026-10-31,19:40,Futsal Group A,Group A,Joga Bonito,5,AKG,1,Futsal Court,FS 7 | 19:40 - 20:00
-2026-10-31,19:40,Football,Group,Wazi FC,,Milo Dinosaur,,Football Pitch (9v9),FB 5 | 19:40 - 20:10
-2026-10-31,20:10,Futsal Group A,Group A,Joga Bonito,,Mechamen,,Futsal Court,FS 8 | 20:10 - 20:30
+2026-10-31,19:40,Football,Group,Wazi FC,3,Milo Dinosaur,1,Football Pitch (9v9),FB 5 | 19:40 - 20:10
+2026-10-31,20:10,Futsal Group A,Group A,Joga Bonito,3,Mechamen,2,Futsal Court,FS 8 | 20:10 - 20:30
 2026-11-01,14:20,Futsal Group B,Group B,Eagles FC,,Atlas FC,,Futsal Court,FS 9 | 14:20 - 14:40
 2026-11-01,14:20,Football,Group,Joga Bonito,,Hatricks FC,,Football Pitch (9v9),FB 6 | 14:20 - 14:50
 2026-11-01,14:50,Futsal Group B,Group B,Wazi FC,,Eagles FC,,Futsal Court,FS 10 | 14:50 - 15:10
