@@ -406,9 +406,13 @@
 
     if (!list.length) { box.appendChild(el("div", "msg", "No matches yet.")); return; }
 
-    let lastDate = null;
+    // Knockouts view: grouped under a "Football" / "Futsal" subtitle. Other views: grouped by day.
+    const byLeague = leagueFilter === "Knockouts";
+    if (byLeague) list.sort((a, b) => a.league.localeCompare(b.league) || a.sortKey.localeCompare(b.sortKey));
+    let lastHeading = null;
     list.forEach(m => {
-      if (m.date !== lastDate) { box.appendChild(el("h3", "", formatDate(m.date))); lastDate = m.date; }
+      const heading = byLeague ? m.league : formatDate(m.date);
+      if (heading !== lastHeading) { box.appendChild(el("h3", "", heading)); lastHeading = heading; }
       box.appendChild(matchCard(m));
     });
   }
