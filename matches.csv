@@ -5,9 +5,9 @@ date,time,league,stage,team1,score1,team2,score2,venue,note
 2026-10-31,17:30,Futsal Group A,Group A,Mechamen,4,AKG,2,Futsal Court,FS 2 | 17:30 - 17:50
 2026-10-31,17:50,Futsal Group B,Group B,Eagles FC,2,Hatricks FC,2,Futsal Court,FS 3 | 17:50 - 18:10
 2026-10-31,18:10,Football,Group,Wazi FC,4,Joga Bonito,1,Football Pitch (9v9),FB 3 | 18:10 - 18:40
-2026-10-31,18:20,Futsal Group A,Group A,Milo Dinosaur,,Mechamen,,Futsal Court,FS 4 | 18:20 - 18:40
-2026-10-31,18:50,Futsal Group A,Group A,Milo Dinosaur,,Joga Bonito,,Futsal Court,FS 5 | 18:50 - 19:10
-2026-10-31,18:50,Football,Group,Eagles FC,,Forest Boys,,Football Pitch (9v9),FB 4 | 18:50 - 19:20
+2026-10-31,18:20,Futsal Group A,Group A,Milo Dinosaur,3,Mechamen,1,Futsal Court,FS 4 | 18:20 - 18:40
+2026-10-31,18:50,Futsal Group A,Group A,Milo Dinosaur,4,Joga Bonito,1,Futsal Court,FS 5 | 18:50 - 19:10
+2026-10-31,18:50,Football,Group,Eagles FC,0,Forest Boys,7,Football Pitch (9v9),FB 4 | 18:50 - 19:20
 2026-10-31,19:10,Futsal Group B,Group B,Wazi FC,,Hatricks FC,,Futsal Court,FS 6 | 19:10 - 19:30
 2026-10-31,19:40,Futsal Group A,Group A,Joga Bonito,,AKG,,Futsal Court,FS 7 | 19:40 - 20:00
 2026-10-31,19:40,Football,Group,Wazi FC,,Milo Dinosaur,,Football Pitch (9v9),FB 5 | 19:40 - 20:10
