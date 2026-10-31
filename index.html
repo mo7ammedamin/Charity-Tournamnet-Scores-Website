@@ -129,7 +129,9 @@
 <script>
   // ================= SETTINGS =================
   const TEAMS_FILE   = "teams.csv";    // league,team
-  const MATCHES_FILE = "matches.csv";  // date,time,league,stage,team1,score1,team2,score2,venue,note
+  const MATCHES_FILE = "matches.csv";  // group matches: date,time,league,stage,team1,score1,team2,score2,venue,note
+  const KNOCKOUTS_FILE = "knockouts.csv"; // semifinals + finals, same columns as matches.csv
+  const MATCH_COLUMNS = ["date", "time", "league", "stage", "team1", "score1", "team2", "score2", "venue", "note"];
   const POINTS_FOR_WIN  = 3;
   const POINTS_FOR_DRAW = 1;
   const POINTS_FOR_LOSS = 0;
@@ -227,7 +229,7 @@
   }
 
   // ---------- data ----------
-  function parseData(teamsText, matchesText) {
+  function parseData(teamsText, matchesText, knockoutsText) {
     const skipped = [];
 
     const teams = readRows(teamsText, TEAMS_FILE, ["league", "team"])
@@ -238,8 +240,21 @@
       })
       .map(r => ({ league: r.get("league"), team: r.get("team") }));
 
-    const matches = readRows(matchesText, MATCHES_FILE,
-      ["date", "time", "league", "stage", "team1", "score1", "team2", "score2", "venue", "note"])
+    const matches = [
+      ...parseMatches(matchesText, MATCHES_FILE, false, skipped),
+      ...(knockoutsText ? parseMatches(knockoutsText, KNOCKOUTS_FILE, true, skipped) : [])
+    ];
+
+    if (skipped.length) {
+      warnBox.hidden = false;
+      warnBox.textContent = "⚠ Skipped invalid line(s): " + skipped.join(", ") +
+        ". Check dates are YYYY-MM-DD, times are HH:MM, and scores are whole numbers (both filled in, or both blank).";
+    }
+    return { teams, matches };
+  }
+
+  function parseMatches(text, fileName, knockout, skipped) {
+    return readRows(text, fileName, MATCH_COLUMNS)
       .map(r => {
         const m = {
           date: r.get("date"), time: r.get("time"), league: r.get("league"), stage: r.get("stage"),
@@ -252,19 +267,13 @@
           (m.s1 === null) === (m.s2 === null) &&                 // both scores or neither
           (m.date === "" || /^\d{4}-\d{2}-\d{2}$/.test(m.date)) &&
           (m.time === "" || /^\d{1,2}:\d{2}$/.test(m.time));
-        if (!ok) { skipped.push(MATCHES_FILE + " line " + r.line); return null; }
+        if (!ok) { skipped.push(fileName + " line " + r.line); return null; }
+        m.knockout = knockout;
         m.played = m.s1 !== null;
         m.sortKey = (m.date || "9999-99-99") + " " + (m.time ? m.time.padStart(5, "0") : "99:99");
         return m;
       })
       .filter(Boolean);
-
-    if (skipped.length) {
-      warnBox.hidden = false;
-      warnBox.textContent = "⚠ Skipped invalid line(s): " + skipped.join(", ") +
-        ". Check dates are YYYY-MM-DD, times are HH:MM, and scores are whole numbers (both filled in, or both blank).";
-    }
-    return { teams, matches };
   }
 
   function computeStandings(teams, matches) {
@@ -281,7 +290,7 @@
     teams.forEach(t => entry(t.league, t.team));
 
     matches
-      .filter(m => m.played && isTableStage(m.stage))
+      .filter(m => m.played && !m.knockout && isTableStage(m.stage))
       .forEach(m => {
         const a = entry(m.league, m.team1), b = entry(m.league, m.team2);
         a.gf += m.s1; a.ga += m.s2;
@@ -346,9 +355,10 @@
 
   function leagueChips(onChange) {
     const names = [];
-    [...DATA.teams.map(t => t.league), ...DATA.matches.map(m => m.league)].forEach(n => {
+    [...DATA.teams.map(t => t.league), ...DATA.matches.filter(m => !m.knockout).map(m => m.league)].forEach(n => {
       if (!names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n);
     });
+    if (DATA.matches.some(m => m.knockout)) names.push("Knockouts");
     const wrap = el("div", "chips");
     if (names.length < 2) return wrap;
     ["All", ...names].forEach(n => {
@@ -389,7 +399,9 @@
     box.appendChild(leagueChips(renderMatches));
 
     const list = DATA.matches
-      .filter(m => leagueFilter === "All" || m.league.toLowerCase() === leagueFilter.toLowerCase())
+      .filter(m => leagueFilter === "All" ||
+        (leagueFilter === "Knockouts" ? m.knockout
+          : !m.knockout && m.league.toLowerCase() === leagueFilter.toLowerCase()))
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey) || a.line - b.line);
 
     if (!list.length) { box.appendChild(el("div", "msg", "No matches yet.")); return; }
@@ -424,9 +436,12 @@
     });
   }
 
-  Promise.all([load(TEAMS_FILE), load(MATCHES_FILE)])
-    .then(([teamsText, matchesText]) => {
-      DATA = parseData(teamsText, matchesText);
+  // knockouts.csv is optional: if it's missing, the page just shows no knockouts
+  const loadOptional = file => load(file).catch(() => "");
+
+  Promise.all([load(TEAMS_FILE), load(MATCHES_FILE), loadOptional(KNOCKOUTS_FILE)])
+    .then(([teamsText, matchesText, knockoutsText]) => {
+      DATA = parseData(teamsText, matchesText, knockoutsText);
       if (newest) {
         document.getElementById("updated").textContent = "Last updated: " +
           newest.toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
