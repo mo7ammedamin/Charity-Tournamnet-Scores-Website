@@ -2,6 +2,6 @@ date,time,league,stage,team1,score1,team2,score2,venue,note
 2026-11-01,17:10,Football,Semifinal,Wazi FC,4,Milo Dinosaur,2,Football Pitch (9v9),FB SF 1 | 17:10 - 17:40
 2026-11-01,17:40,Futsal,Semifinal,Joga Bonito,1,Atlas FC,4,Futsal Court,FS SF 1 | 17:40 - 18:00
 2026-11-01,18:20,Football,Semifinal,Forest boys,,Joga Bonito FC,,Football Pitch (9v9),FB SF 2 | 18:20 - 18:50
-2026-11-01,18:00,Futsal,Semifinal,Wazi FC,,Milo Dinosaur,,Futsal Court,FS SF 2 | 18:00 - 18:20
-2026-11-01,19:20,Futsal,Final,Winner SF 1,,Winner SF 2,,Futsal Court,FS Final | 19:20 - 19:40
-2026-11-01,20:00,Football,Final,Winner SF 1,,Winner SF 2,,Football Pitch (9v9),FB Final | 20:00 - 20:30
+2026-11-01,18:00,Futsal,Semifinal,Wazi FC,1,Milo Dinosaur,3,Futsal Court,FS SF 2 | 18:00 - 18:20
+2026-11-01,19:20,Milo dinosaur,,Atlas FC 2,,Futsal Court,FS Final | 19:20 - 19:40
+2026-11-01,20:00,Football,Final,Wazi FC,,Winner SF 2,,Football Pitch (9v9),FB Final | 20:00 - 20:30
