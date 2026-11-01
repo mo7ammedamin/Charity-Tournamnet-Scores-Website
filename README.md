@@ -1,6 +1,6 @@
 # ISoc Charity Tournament scores website
 
-Live site: https://YOUR-USERNAME.github.io/YOUR-REPO/](https://mo7ammedamin.github.io/Charity-Tournamnet-Scores-Website/
+Live site: https://mo7ammedamin.github.io/Charity-Tournamnet-Scores-Website/
 
 ## Files
 
